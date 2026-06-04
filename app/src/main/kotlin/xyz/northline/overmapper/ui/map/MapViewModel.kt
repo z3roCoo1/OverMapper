@@ -15,9 +15,11 @@ import org.maplibre.android.style.layers.PropertyFactory.*
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.android.style.expressions.Expression
 import xyz.northline.overmapper.data.datastore.UserPreferencesRepository
+import xyz.northline.overmapper.data.db.entity.MarkerEntity
 import xyz.northline.overmapper.data.repository.MarkerRepository
 import xyz.northline.overmapper.data.repository.TrailRepository
 import xyz.northline.overmapper.domain.TrailGeoJsonBuilder
+import xyz.northline.overmapper.domain.model.MarkerType
 import xyz.northline.overmapper.domain.model.RecordingState
 import xyz.northline.overmapper.domain.model.TrailPoint
 import xyz.northline.overmapper.service.RecordingService
@@ -139,10 +141,10 @@ class MapViewModel @Inject constructor(
         )
     }
 
-    fun addMarker(lat: Double, lon: Double, trailId: Long?, type: xyz.northline.overmapper.domain.model.MarkerType, body: String?) {
+    fun addMarker(lat: Double, lon: Double, trailId: Long?, type: MarkerType, body: String?) {
         viewModelScope.launch {
             markerRepository.insert(
-                xyz.northline.overmapper.data.db.entity.MarkerEntity(
+                MarkerEntity(
                     trailId = trailId, latitude = lat, longitude = lon,
                     type = type.name, body = body,
                     createdAt = System.currentTimeMillis()
