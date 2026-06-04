@@ -138,4 +138,16 @@ class MapViewModel @Inject constructor(
             lineJoin(Property.LINE_JOIN_ROUND)
         )
     }
+
+    fun addMarker(lat: Double, lon: Double, trailId: Long?, type: xyz.northline.overmapper.domain.model.MarkerType, body: String?) {
+        viewModelScope.launch {
+            markerRepository.insert(
+                xyz.northline.overmapper.data.db.entity.MarkerEntity(
+                    trailId = trailId, latitude = lat, longitude = lon,
+                    type = type.name, body = body,
+                    createdAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
 }

@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.northline.overmapper.domain.model.RecordingState
+import xyz.northline.overmapper.ui.components.AddMarkerSheet
 import xyz.northline.overmapper.ui.components.TrailBottomSheet
 
 @Composable
@@ -22,12 +23,21 @@ fun MapScreen(
     val prefs by viewModel.preferences.collectAsStateWithLifecycle()
     val selectedTrailId by viewModel.selectedTrailId.collectAsStateWithLifecycle()
     var showStopDialog by remember { mutableStateOf(false) }
+    var pendingMarkerLat by remember { mutableStateOf(0.0) }
+    var pendingMarkerLon by remember { mutableStateOf(0.0) }
+    var showAddMarker by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         MapLibreView(
             modifier = Modifier.fillMaxSize(),
             onMapReady = { map, _ ->
                 viewModel.onMapReady(map, prefs?.mapTileSource ?: "OPENFREEMAP")
+                map.addOnMapLongClickListener { point ->
+                    pendingMarkerLat = point.latitude
+                    pendingMarkerLon = point.longitude
+                    showAddMarker = true
+                    true
+                }
             }
         )
 
@@ -69,6 +79,19 @@ fun MapScreen(
                 trailId = trailId,
                 onDismiss = { viewModel.selectTrail(null) },
                 onOpenDetail = { onNavigateToDetail(trailId) }
+            )
+        }
+
+        if (showAddMarker) {
+            AddMarkerSheet(
+                latitude = pendingMarkerLat,
+                longitude = pendingMarkerLon,
+                trailId = null,
+                onSave = { type, body ->
+                    viewModel.addMarker(pendingMarkerLat, pendingMarkerLon, null, type, body)
+                    showAddMarker = false
+                },
+                onDismiss = { showAddMarker = false }
             )
         }
     }
