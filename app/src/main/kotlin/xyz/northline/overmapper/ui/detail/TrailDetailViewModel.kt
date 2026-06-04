@@ -2,6 +2,8 @@ package xyz.northline.overmapper.ui.detail
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import xyz.northline.overmapper.data.db.entity.TrailPhotoEntity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -60,6 +62,24 @@ class TrailDetailViewModel @Inject constructor(
             }
             context.startActivity(Intent.createChooser(intent, "Export GPX"))
         }
+    }
+
+    fun attachPhoto(context: Context, uri: Uri, trailId: Long, lat: Double, lon: Double) {
+        viewModelScope.launch {
+            photoRepository.insert(
+                TrailPhotoEntity(
+                    trailId = trailId,
+                    latitude = lat,
+                    longitude = lon,
+                    fileUri = uri.toString(),
+                    takenAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+
+    fun deletePhoto(photo: TrailPhoto) {
+        viewModelScope.launch { photoRepository.delete(photo) }
     }
 
     fun deleteTrail(onDeleted: () -> Unit) {

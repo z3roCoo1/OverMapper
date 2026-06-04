@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,11 +24,21 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrailDetailScreen(
+    trailId: Long,
     onBack: () -> Unit,
     viewModel: TrailDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val trail by viewModel.trail.collectAsStateWithLifecycle()
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            val lat = trail?.let { t -> (t.bboxSwLat + t.bboxNeLat) / 2 } ?: 0.0
+            val lon = trail?.let { t -> (t.bboxSwLon + t.bboxNeLon) / 2 } ?: 0.0
+            viewModel.attachPhoto(context, it, trailId, lat, lon)
+        }
+    }
     val points by viewModel.points.collectAsStateWithLifecycle()
     val photos by viewModel.photos.collectAsStateWithLifecycle()
     val markers by viewModel.markers.collectAsStateWithLifecycle()
@@ -81,8 +93,8 @@ fun TrailDetailScreen(
                 }
             }
 
+            Text("Photos", style = MaterialTheme.typography.titleLarge)
             if (photos.isNotEmpty()) {
-                Text("Photos", style = MaterialTheme.typography.titleLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(photos, key = { it.id }) { photo ->
                         AsyncImage(
@@ -93,6 +105,9 @@ fun TrailDetailScreen(
                         )
                     }
                 }
+            }
+            TextButton(onClick = { photoPickerLauncher.launch("image/*") }) {
+                Text("+ Add photo")
             }
 
             if (markers.isNotEmpty()) {
