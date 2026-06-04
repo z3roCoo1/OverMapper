@@ -18,8 +18,8 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): OverMapperDatabase =
         Room.databaseBuilder(context, OverMapperDatabase::class.java, "overmapper.db").build()
 
-    @Provides fun provideTrailDao(db: OverMapperDatabase) = db.trailDao()
-    @Provides fun provideTrailPointDao(db: OverMapperDatabase) = db.trailPointDao()
-    @Provides fun provideMarkerDao(db: OverMapperDatabase) = db.markerDao()
-    @Provides fun provideTrailPhotoDao(db: OverMapperDatabase) = db.trailPhotoDao()
+    @Provides @Singleton fun provideTrailDao(db: OverMapperDatabase) = db.trailDao()
+    @Provides @Singleton fun provideTrailPointDao(db: OverMapperDatabase) = db.trailPointDao()
+    @Provides @Singleton fun provideMarkerDao(db: OverMapperDatabase) = db.markerDao()
+    @Provides @Singleton fun provideTrailPhotoDao(db: OverMapperDatabase) = db.trailPhotoDao()
 }
