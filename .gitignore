@@ -1,0 +1,8 @@
+*.jks
+*.jks.b64
+*.jks.properties
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
