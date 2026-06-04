@@ -11,8 +11,8 @@ import xyz.northline.overmapper.ui.theme.OverMapperTheme
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             OverMapperTheme {
                 NavGraph()
