@@ -19,7 +19,7 @@ android {
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
-        applicationId = "xyz.northline.overmapper"
+        applicationId = "com.z3rocool.overmapper"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
