@@ -1,0 +1,14 @@
+OverMapper records each walk and threads it into the ones before — until your hills become a single connected web of trails.
+
+Every route you walk is layered over the last. Over time, the paths join up, the gaps close, and your landscape becomes your own.
+
+Offline-first. Your data stays yours.
+
+Features:
+• Automatic trail recording with smart stationary detection
+• Overlaid trail web — colour-coded by age
+• Elevation gradient view (uphill, flat, downhill)
+• Condition markers — flag impassable paths, overgrowth, treacherous climbs
+• Photo pins — attach photos at GPS coordinates
+• Calorie estimate (optional — enter your weight in Settings)
+• Export any trail as GPX or share a map snapshot
