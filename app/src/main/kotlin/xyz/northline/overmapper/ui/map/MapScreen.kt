@@ -1,5 +1,9 @@
 package xyz.northline.overmapper.ui.map
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -7,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.northline.overmapper.domain.model.RecordingState
@@ -26,6 +31,34 @@ fun MapScreen(
     var pendingMarkerLat by remember { mutableStateOf(0.0) }
     var pendingMarkerLon by remember { mutableStateOf(0.0) }
     var showAddMarker by remember { mutableStateOf(false) }
+    var showLocationRationale by remember { mutableStateOf(false) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+            viewModel.startRecording(context)
+        } else {
+            showLocationRationale = true
+        }
+    }
+
+    fun launchRecording() {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            viewModel.startRecording(context)
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         MapLibreView(
@@ -54,7 +87,7 @@ fun MapScreen(
         FloatingActionButton(
             onClick = {
                 when (recordingState) {
-                    is RecordingState.Idle -> viewModel.startRecording(context)
+                    is RecordingState.Idle -> launchRecording()
                     is RecordingState.Recording, is RecordingState.Paused ->
                         showStopDialog = true
                 }
@@ -94,6 +127,17 @@ fun MapScreen(
                 onDismiss = { showAddMarker = false }
             )
         }
+    }
+
+    if (showLocationRationale) {
+        AlertDialog(
+            onDismissRequest = { showLocationRationale = false },
+            title = { Text("Location required") },
+            text = { Text("Location permission is needed to record a route. Grant it in Settings.") },
+            confirmButton = {
+                TextButton(onClick = { showLocationRationale = false }) { Text("OK") }
+            }
+        )
     }
 
     if (showStopDialog) {
