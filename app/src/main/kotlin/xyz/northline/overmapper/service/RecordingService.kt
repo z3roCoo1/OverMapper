@@ -154,13 +154,15 @@ class RecordingService : LifecycleService() {
                 addPoint(point, segmentIndex)
                 lastAcceptedPoint?.let { distanceM += it.distanceTo(point) }
                 lastAcceptedPoint = point
-                stateHolder.update(RecordingState.Recording(currentTrailId, startMs, distanceM, pendingPoints.size))
+                stateHolder.update(RecordingState.Recording(currentTrailId, startMs, distanceM,
+                    pendingPoints.size, point.latitude, point.longitude))
             }
             is FilterResult.Resume -> {
                 segmentIndex++
                 addPoint(point, segmentIndex)
                 lastAcceptedPoint = point
-                stateHolder.update(RecordingState.Recording(currentTrailId, startMs, distanceM, pendingPoints.size))
+                stateHolder.update(RecordingState.Recording(currentTrailId, startMs, distanceM,
+                    pendingPoints.size, point.latitude, point.longitude))
             }
             FilterResult.Pause -> {
                 stateHolder.update(RecordingState.Paused(currentTrailId, startMs, distanceM))

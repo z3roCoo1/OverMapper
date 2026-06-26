@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +29,7 @@ fun MapScreen(
     val recordingState by viewModel.recordingState.collectAsStateWithLifecycle()
     val prefs by viewModel.preferences.collectAsStateWithLifecycle()
     val selectedTrailId by viewModel.selectedTrailId.collectAsStateWithLifecycle()
+    val overlayVisible by viewModel.overlayVisible.collectAsStateWithLifecycle()
     var showStopDialog by remember { mutableStateOf(false) }
     var pendingMarkerLat by remember { mutableStateOf(0.0) }
     var pendingMarkerLon by remember { mutableStateOf(0.0) }
@@ -81,6 +84,23 @@ fun MapScreen(
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
                     .padding(top = 12.dp)
+            )
+        }
+
+        SmallFloatingActionButton(
+            onClick = { viewModel.toggleOverlay() },
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .navigationBarsPadding()
+                .padding(24.dp),
+            containerColor = if (overlayVisible) MaterialTheme.colorScheme.primaryContainer
+                             else MaterialTheme.colorScheme.surfaceVariant
+        ) {
+            Icon(
+                imageVector = Icons.Default.Layers,
+                contentDescription = "Toggle trail overlay",
+                tint = if (overlayVisible) MaterialTheme.colorScheme.onPrimaryContainer
+                       else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 

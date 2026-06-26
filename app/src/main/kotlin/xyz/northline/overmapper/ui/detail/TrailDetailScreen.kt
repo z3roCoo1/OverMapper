@@ -26,6 +26,7 @@ import java.util.*
 fun TrailDetailScreen(
     trailId: Long,
     onBack: () -> Unit,
+    onViewOnMap: () -> Unit = {},
     viewModel: TrailDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -61,6 +62,10 @@ fun TrailDetailScreen(
                     }
                 },
                 actions = {
+                    TextButton(onClick = {
+                        viewModel.requestViewOnMap()
+                        onViewOnMap()
+                    }) { Text("Map") }
                     TextButton(onClick = { viewModel.exportGpx(context) }) { Text("GPX") }
                     TextButton(
                         onClick = { showDeleteDialog = true },

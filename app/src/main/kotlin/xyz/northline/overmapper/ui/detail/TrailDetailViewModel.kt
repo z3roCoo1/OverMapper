@@ -19,6 +19,7 @@ import xyz.northline.overmapper.domain.model.Marker
 import xyz.northline.overmapper.domain.model.Trail
 import xyz.northline.overmapper.domain.model.TrailPhoto
 import xyz.northline.overmapper.domain.model.TrailPoint
+import xyz.northline.overmapper.service.MapFocusHolder
 import java.io.File
 import javax.inject.Inject
 
@@ -27,7 +28,8 @@ class TrailDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val trailRepository: TrailRepository,
     private val markerRepository: MarkerRepository,
-    private val photoRepository: PhotoRepository
+    private val photoRepository: PhotoRepository,
+    private val mapFocusHolder: MapFocusHolder
 ) : ViewModel() {
 
     private val trailId: Long = checkNotNull(savedStateHandle["trailId"])
@@ -80,6 +82,10 @@ class TrailDetailViewModel @Inject constructor(
 
     fun deletePhoto(photo: TrailPhoto) {
         viewModelScope.launch { photoRepository.delete(photo) }
+    }
+
+    fun requestViewOnMap() {
+        mapFocusHolder.request(trailId)
     }
 
     fun deleteTrail(onDeleted: () -> Unit) {

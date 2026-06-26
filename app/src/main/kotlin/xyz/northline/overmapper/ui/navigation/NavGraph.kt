@@ -83,7 +83,19 @@ fun NavGraph() {
                 arguments = listOf(navArgument("trailId") { type = NavType.LongType })
             ) { backStack ->
                 val trailId = backStack.arguments!!.getLong("trailId")
-                TrailDetailScreen(trailId = trailId, onBack = { navController.popBackStack() })
+                TrailDetailScreen(
+                    trailId = trailId,
+                    onBack = { navController.popBackStack() },
+                    onViewOnMap = {
+                        navController.navigate(Screen.MapTab.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
         }
     }

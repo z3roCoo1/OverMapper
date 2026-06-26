@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
@@ -22,6 +25,7 @@ import xyz.northline.overmapper.domain.TrailGeoJsonBuilder
 import xyz.northline.overmapper.domain.model.MarkerType
 import xyz.northline.overmapper.domain.model.RecordingState
 import xyz.northline.overmapper.domain.model.TrailPoint
+import xyz.northline.overmapper.service.MapFocusHolder
 import xyz.northline.overmapper.service.RecordingService
 import xyz.northline.overmapper.service.RecordingStateHolder
 import javax.inject.Inject
@@ -31,7 +35,8 @@ class MapViewModel @Inject constructor(
     private val trailRepository: TrailRepository,
     private val markerRepository: MarkerRepository,
     private val stateHolder: RecordingStateHolder,
-    private val prefsRepository: UserPreferencesRepository
+    private val prefsRepository: UserPreferencesRepository,
+    private val mapFocusHolder: MapFocusHolder
 ) : ViewModel() {
 
     val recordingState: StateFlow<RecordingState> = stateHolder.state
@@ -43,22 +48,59 @@ class MapViewModel @Inject constructor(
     private val _selectedTrailId = MutableStateFlow<Long?>(null)
     val selectedTrailId: StateFlow<Long?> = _selectedTrailId.asStateFlow()
 
+    private val _overlayVisible = MutableStateFlow(true)
+    val overlayVisible: StateFlow<Boolean> = _overlayVisible.asStateFlow()
+
     private var mapLibreMap: MapLibreMap? = null
     private val OVERLAY_SOURCE = "trail-overlay"
     private val GRADIENT_SOURCE = "trail-gradient"
     private val OVERLAY_LAYER = "trail-overlay-layer"
     private val GRADIENT_LAYER = "trail-gradient-layer"
 
+    private var hasZoomedOnCurrentRecording = false
+
     init {
         viewModelScope.launch {
             combine(
                 trailRepository.observeAll(),
                 trailRepository.observeAllPoints(),
-                prefsRepository.preferences
-            ) { trails, points, prefs -> Triple(trails, points, prefs) }
-                .collectLatest { (trails, points, prefs) ->
-                    updateOverlay(trails.map { it.id }, points, prefs.gradientEnabled)
+                prefsRepository.preferences,
+                _overlayVisible
+            ) { trails, points, prefs, ov ->
+                Pair(Triple(trails.map { it.id }, points, prefs.gradientEnabled), ov)
+            }.collectLatest { (trailData, ov) ->
+                val (ids, pts, gradient) = trailData
+                updateOverlay(ids, pts, gradient, ov)
+            }
+        }
+
+        viewModelScope.launch {
+            recordingState.collect { state ->
+                if (state is RecordingState.Recording && !hasZoomedOnCurrentRecording) {
+                    val lat = state.lastLat ?: return@collect
+                    val lon = state.lastLon ?: return@collect
+                    hasZoomedOnCurrentRecording = true
+                    mapLibreMap?.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(LatLng(lat, lon), 16.0)
+                    )
+                } else if (state is RecordingState.Idle) {
+                    hasZoomedOnCurrentRecording = false
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            mapFocusHolder.focusTrailId.filterNotNull().collect { trailId ->
+                mapFocusHolder.clear()
+                val pts = trailRepository.getPointsForTrail(trailId)
+                if (pts.size >= 2) {
+                    val builder = LatLngBounds.Builder()
+                    pts.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
+                    mapLibreMap?.animateCamera(
+                        CameraUpdateFactory.newLatLngBounds(builder.build(), 100)
+                    )
+                }
+            }
         }
     }
 
@@ -73,6 +115,8 @@ class MapViewModel @Inject constructor(
     }
 
     fun selectTrail(id: Long?) { _selectedTrailId.value = id }
+
+    fun toggleOverlay() { _overlayVisible.value = !_overlayVisible.value }
 
     fun startRecording(context: Context) {
         context.startForegroundService(Intent(context, RecordingService::class.java).apply {
@@ -89,14 +133,18 @@ class MapViewModel @Inject constructor(
     private fun updateOverlay(
         trailIds: List<Long>,
         points: List<TrailPoint>,
-        gradientEnabled: Boolean
+        gradientEnabled: Boolean,
+        overlayVisible: Boolean
     ) {
         val style = mapLibreMap?.style ?: return
+        val vis = if (overlayVisible) Property.VISIBLE else Property.NONE
+
         val overlayJson = TrailGeoJsonBuilder.buildOverlay(trailIds, points)
         style.getSourceAs<GeoJsonSource>(OVERLAY_SOURCE)?.setGeoJson(overlayJson)
+        style.getLayer(OVERLAY_LAYER)?.setProperties(visibility(vis))
 
         val gradientLayer = style.getLayer(GRADIENT_LAYER)
-        if (gradientEnabled) {
+        if (overlayVisible && gradientEnabled) {
             val gradientJson = TrailGeoJsonBuilder.buildGradient(points)
             style.getSourceAs<GeoJsonSource>(GRADIENT_SOURCE)?.setGeoJson(gradientJson)
             gradientLayer?.setProperties(visibility(Property.VISIBLE))
