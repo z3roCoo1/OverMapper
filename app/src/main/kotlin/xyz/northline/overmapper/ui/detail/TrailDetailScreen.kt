@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -32,7 +33,7 @@ fun TrailDetailScreen(
     val context = LocalContext.current
     val trail by viewModel.trail.collectAsStateWithLifecycle()
     val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
             val lat = trail?.let { t -> (t.bboxSwLat + t.bboxNeLat) / 2 } ?: 0.0
@@ -111,7 +112,9 @@ fun TrailDetailScreen(
                     }
                 }
             }
-            TextButton(onClick = { photoPickerLauncher.launch("image/*") }) {
+            TextButton(onClick = {
+                photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }) {
                 Text("+ Add photo")
             }
 
