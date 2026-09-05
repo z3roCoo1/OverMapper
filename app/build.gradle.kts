@@ -15,15 +15,15 @@ val keystoreProps = Properties().apply {
 
 android {
     namespace = "xyz.northline.overmapper"
-    compileSdk = 35
-    buildToolsVersion = "35.0.0"
+    compileSdk = 36
+    buildToolsVersion = "36.1.0"
 
     defaultConfig {
         applicationId = "com.z3rocool.overmapper"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.4"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "1.0.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
