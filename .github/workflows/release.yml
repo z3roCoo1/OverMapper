@@ -50,6 +50,15 @@ jobs:
           path: app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
 
+      - name: Check for native debug symbols
+        id: symbols
+        run: |
+          if [ -f app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip ]; then
+            echo "path=app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload to Play Store (internal track)
         uses: r0adkll/upload-google-play@v1
         with:
@@ -58,7 +67,7 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: internal
           status: completed
-          debugSymbols: app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip
+          debugSymbols: ${{ steps.symbols.outputs.path }}
           mappingFile: app/build/outputs/mapping/release/mapping.txt
 
       - name: Create GitHub Release
